@@ -21,7 +21,33 @@ const Db = struct {
 var err_str: ?rocks.Data = null;
 
 pub fn main() !void {
-    try singleThreaded();
+    try simple();
+}
+
+pub fn simple() !void {
+    var args = try std.process.argsWithAllocator(allocator);
+    defer args.deinit();
+
+    const path = "data";
+
+    if (config.freshDb) {
+        if (std.fs.cwd().access(path, .{})) |_| {
+            try std.fs.cwd().deleteTree(path);
+        } else |_| {}
+        try std.fs.cwd().makePath(path);
+    }
+
+    var db: Db = try open(allocator, path);
+
+    const delete_start = [_]u8{ 182, 28, 212, 119 };
+    const delete_end = [_]u8{ 190, 147, 84, 76 };
+    const get = [_]u8{ 61, 84, 191, 167, 182, 191, 187, 206 };
+
+    var batch = db.initWriteBatch();
+    batch.deleteRange(db.cf_handle, &delete_start, &delete_end);
+    try db.db.write(batch, &err_str);
+
+    _ = try db.db.get(db.cf_handle, &get, &err_str);
 }
 
 pub fn singleThreaded() !void {
