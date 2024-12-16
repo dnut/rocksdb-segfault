@@ -1,2 +1,6 @@
 /src/repro/
 /.zig-cache/
+/zig-out
+/data
+*.a
+/.vscode
